@@ -4,6 +4,9 @@ import { api } from "../services/api.service";
 interface IUser {
   email: string;
   token: string;
+  avatar: string;
+  name: string;
+  companyId: string;
 }
 
 interface IContext {

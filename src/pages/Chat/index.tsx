@@ -17,16 +17,20 @@ import {
   IconButton,
   InputLabel,
   ListItemAvatar,
+  Menu,
   MenuItem,
   Select,
   SelectChangeEvent,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import { MessageLeft, MessageRight } from "../../components/Message";
 import { Send } from "@mui/icons-material";
 import useFetch from "../../hook/useFetch";
 import { api } from "../../services/api.service";
 import { DateUtils } from "../../utils/dateUtils";
+import useAuth from "../../hook/useAuth";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const drawerWidth = 600;
 
@@ -67,6 +71,7 @@ interface IMessageResponse {
 
 export default function ChatList() {
   const [, setWindowSize] = React.useState(getWindowSize());
+  const navigation = useNavigate();
   const [isMobile, setIsMobile] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const [chatList, setChatList] = React.useState<IChatResponse[]>([]);
@@ -75,6 +80,10 @@ export default function ChatList() {
     instance: undefined,
     chat: undefined,
   });
+  const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
+    null
+  );
+
   const { loading: loadingInstance, data: instancies } =
     useFetch<IInstanceResponse[]>("/instance");
 
@@ -150,6 +159,14 @@ export default function ChatList() {
     });
   };
 
+  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElUser(event.currentTarget);
+  };
+
+  const handleCloseUserMenu = () => {
+    setAnchorElUser(null);
+  };
+
   return (
     <>
       <Box sx={{ display: "flex" }}>
@@ -171,7 +188,7 @@ export default function ChatList() {
             <Typography variant="h6" noWrap component="div">
               Conversas
             </Typography>
-            <IconButton
+            {/* <IconButton
               color="inherit"
               aria-label="open drawer"
               edge="start"
@@ -179,7 +196,37 @@ export default function ChatList() {
               sx={{ ml: "auto" }}
             >
               <Avatar src="https://mui.com/static/images/avatar/1.jpg" />
-            </IconButton>
+            </IconButton> */}
+            <Box sx={{ flexGrow: 0, ml: "auto" }}>
+              <Tooltip title="Opções">
+                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
+                  <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                </IconButton>
+              </Tooltip>
+              <Menu
+                sx={{ mt: "45px" }}
+                id="menu-appbar"
+                anchorEl={anchorElUser}
+                anchorOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "right",
+                }}
+                open={Boolean(anchorElUser)}
+                onClose={handleCloseUserMenu}
+              >
+                <MenuItem onClick={() => navigation("/settings")}>
+                  <Typography textAlign="center">Configurações</Typography>
+                </MenuItem>
+                <MenuItem onClick={handleCloseUserMenu}>
+                  <Typography textAlign="center">Sair</Typography>
+                </MenuItem>
+              </Menu>
+            </Box>
           </Toolbar>
         </AppBar>
         <Drawer
@@ -225,12 +272,16 @@ export default function ChatList() {
                   <ListItemButton onClick={() => handleSelectChat(chat.id)}>
                     <ListItemAvatar>
                       <Avatar
-                        src={`https://storage-api.daeletrica.com.br/view/${chat.avatar}`}
+                        src={
+                          chat.avatar
+                            ? `https://storage-api.daeletrica.com.br/view/${chat.avatar}`
+                            : undefined
+                        }
                       />
                     </ListItemAvatar>
                     <ListItemText
                       primary={chat.name || chat.phone}
-                      secondary={chat.Message[0].body}
+                      secondary={chat.Message[0].body || "mídia"}
                     />
                     <Typography variant="caption" gutterBottom>
                       {DateUtils.diffToString(chat.Message[0].createdAt)}
@@ -265,8 +316,8 @@ export default function ChatList() {
                 );
               }
             })}
-            <div ref={messagesEndRef} style={{ backgroundColor: "red" }} />
           </Box>
+          <div ref={messagesEndRef} style={{ backgroundColor: "red" }} />
           <Box
             style={{
               backgroundColor: "white",
